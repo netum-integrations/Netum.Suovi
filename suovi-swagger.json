@@ -1,0 +1,331 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Suovi Message Relay API",
+    "description": "External API for sending messages, checking status, and retrieving message lists through the Suovi messaging platform.",
+    "contact": {
+      "name": "Suovi Support",
+      "email": "support@example.com"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/message-relay/oauth/token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "OAuth2 Client Credentials token endpoint.\r\nIssues JWT access tokens for valid API key credentials.",
+        "description": "Request body format (form-urlencoded):\r\n- grant_type: Must be \"client_credentials\"\r\n- client_id: The API key client ID\r\n- client_secret: The API key client secret",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "required": [
+                  "client_id",
+                  "client_secret",
+                  "grant_type"
+                ],
+                "type": "object",
+                "properties": {
+                  "grant_type": {
+                    "type": "string"
+                  },
+                  "client_id": {
+                    "type": "string"
+                  },
+                  "client_secret": {
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "grant_type": {
+                  "style": "form"
+                },
+                "client_id": {
+                  "style": "form"
+                },
+                "client_secret": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/message-relay/v1/ping": {
+      "get": {
+        "tags": [
+          "Health Check"
+        ],
+        "summary": "Health check endpoint for external systems.\r\nRequires a valid API key bearer token.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/message-relay/v1/check-mailbox": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Checks if a receiver has an active Suomi.fi mailbox.\r\nRequires a valid API key bearer token.",
+        "description": "Rate limit: 1000 requests per minute per API key.\r\nMaximum request size: 2 MB.\r\n\r\nExample request body:\r\n{\r\n  \"receiverIdentity\": \"123456-7890\"\r\n}\r\n\r\nExample response:\r\n{\r\n  \"receiverIdentity\": \"123456-7890\",\r\n  \"mailboxEnabled\": true\r\n}",
+        "requestBody": {
+          "description": "Request containing the receiver's identity code.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckMailboxRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mailbox check completed successfully."
+          },
+          "400": {
+            "description": "Invalid request (validation errors)."
+          },
+          "401": {
+            "description": "Invalid or missing authentication token."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "429": {
+            "description": "Rate limit exceeded (max 1000 requests per minute)."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/message-relay/v1/send-message": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Sends a new message via the simplified external API.\r\nAPI key determines the sender mailbox automatically (no MailboxGuid needed).\r\nRequires a valid API key bearer token with write access to at least one mailbox.",
+        "description": "Rate limit: 1000 requests per minute per API key.\r\nMaximum request size: 10 MB (including message content and attachments).\r\n\r\nExample request body:\r\n{\r\n  \"receiverName\": \"Essi Esimerkki\",\r\n  \"receiverIdentity\": \"123456-7890\",\r\n  \"subject\": \"Message subject\",\r\n  \"message\": \"Message body content\",\r\n  \"externalIdentifier\": \"your-system-reference-123\",\r\n  \"allowResponse\": false,\r\n  \"attachments\": [\r\n    {\r\n      \"name\": \"document.pdf\",\r\n      \"base64\": \"JVBERi0xLjQK...\"\r\n    }\r\n  ]\r\n}",
+        "requestBody": {
+          "description": "Simplified message send request with recipient, content, and optional attachments.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtSendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Message successfully created and queued for sending."
+          },
+          "400": {
+            "description": "Invalid request (validation errors)."
+          },
+          "401": {
+            "description": "Invalid or missing authentication token."
+          },
+          "403": {
+            "description": "Insufficient permissions (no write access to any mailbox)."
+          },
+          "429": {
+            "description": "Rate limit exceeded (max 1000 requests per minute)."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/message-relay/v1/message-status": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Queries message status by messageId or externalIdentifier.\r\nAt least one identifier must be provided in the request body.\r\nRequires a valid API key bearer token with access to the message's mailbox.",
+        "description": "Rate limit: 1000 requests per minute per API key.\r\nMaximum request size: 2 MB.\r\n\r\nExample request body (by message ID):\r\n{\r\n  \"messageId\": 12345\r\n}\r\n\r\nExample request body (by external identifier):\r\n{\r\n  \"externalIdentifier\": \"your-system-reference-123\"\r\n}\r\n\r\nBoth identifiers can be provided for additional verification.",
+        "requestBody": {
+          "description": "Query request containing messageId and/or externalIdentifier.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageStatusQueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message status retrieved successfully."
+          },
+          "400": {
+            "description": "Invalid request (neither identifier provided)."
+          },
+          "401": {
+            "description": "Invalid or missing authentication token."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Message not found."
+          },
+          "429": {
+            "description": "Rate limit exceeded (max 1000 requests per minute)."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CheckMailboxRequest": {
+        "required": [
+          "receiverIdentity"
+        ],
+        "type": "object",
+        "properties": {
+          "receiverIdentity": {
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z]{9}$|^[0-9]{6}[+-A][0-9]{3}[0-9A-Za-z]$",
+            "type": "string",
+            "description": "Receiver's personal identity code (11 characters) or business identity code (9 characters)."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request DTO for checking if a receiver has an active Suomi.fi mailbox.\r\nUsed by POST /message-relay/v1/check-mailbox endpoint."
+      },
+      "ExtAttachmentDto": {
+        "required": [
+          "base64",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "Attachment filename (max 255 characters)."
+          },
+          "base64": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Base64-encoded file content."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Simplified attachment DTO for message-relay/v1 message sending."
+      },
+      "ExtSendMessageRequest": {
+        "required": [
+          "message",
+          "receiverIdentity",
+          "receiverName",
+          "subject"
+        ],
+        "type": "object",
+        "properties": {
+          "receiverName": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Receiver's name (max 50 characters)."
+          },
+          "receiverIdentity": {
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z]{9}$|^[0-9]{6}[+-A][0-9]{3}[0-9A-Za-z]$",
+            "type": "string",
+            "description": "Receiver's personal identity code (11 characters) or business identity code (9 characters)."
+          },
+          "subject": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string",
+            "description": "Message subject/title (max 100 characters)."
+          },
+          "message": {
+            "maxLength": 50000,
+            "minLength": 1,
+            "type": "string",
+            "description": "Message body content (max 50000 characters)."
+          },
+          "externalIdentifier": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Optional external reference ID for tracking by the calling system (max 100 characters).",
+            "nullable": true
+          },
+          "allowResponse": {
+            "type": "boolean",
+            "description": "Indicates whether the receiver is allowed to respond to this message.\r\nDefaults to false (no response allowed)."
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExtAttachmentDto"
+            },
+            "description": "Optional attachments to include with the message.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Simplified request DTO for sending a message via message-relay/v1.\r\nAPI key determines the sender mailbox automatically (no MailboxGuid needed)."
+      },
+      "MessageStatusQueryRequest": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "integer",
+            "description": "Internal message ID (optional if externalIdentifier is provided).",
+            "format": "int64",
+            "nullable": true
+          },
+          "externalIdentifier": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "External reference ID (optional if messageId is provided).",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request DTO for querying message status by messageId or externalIdentifier.\r\nAt least one identifier must be provided.\r\nUsed by POST /message-relay/v1/message-status endpoint."
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Enter the JWT token obtained from /message-relay/oauth/token endpoint. Format: Bearer {token}",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}

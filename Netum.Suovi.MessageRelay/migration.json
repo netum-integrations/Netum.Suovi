@@ -1,0 +1,12 @@
+[
+  {
+    "Task": "Netum.Suovi.MessageRelay",
+    "Migrations": [
+      {
+        "Version": "1.0.0",
+        "Description": "Initial Suovi Message Relay task release.",
+        "Migration": []
+      }
+    ]
+  }
+]

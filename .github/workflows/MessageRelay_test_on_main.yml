@@ -1,0 +1,32 @@
+name: MessageRelay_test_on_main
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Netum.Suovi.MessageRelay/**'
+      - 'Netum.Suovi.MessageRelay.Tests/**'
+      - 'Netum.Suovi.MessageRelay.sln'
+      - '.github/workflows/MessageRelay_*.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: dotnet build Netum.Suovi.MessageRelay.sln
+
+      - name: Test
+        run: dotnet test Netum.Suovi.MessageRelay.sln --no-build
