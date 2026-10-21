@@ -10,7 +10,7 @@ You can install the Task via Frends UI Task View.
 
 ### Clone a copy of the repository
 
-`git clone https://github.com/FrendsPlatform/Netum.Suovi.git`
+`git clone https://github.com/netum-integrations/Netum.Suovi.git`
 
 ### Build the project
 

@@ -18,7 +18,7 @@ public class Result
     public string ContentType { get; set; } = string.Empty;
 
     /// <summary>Response headers.</summary>
-    /// <example>{[ "content-type": "application/json" ]}</example>
+    /// <example>{ "content-type": "application/json" }</example>
     public Dictionary<string, string> Headers { get; set; } = [];
 
     /// <summary>HTTP status code.</summary>

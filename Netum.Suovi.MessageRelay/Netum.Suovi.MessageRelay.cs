@@ -26,7 +26,7 @@ public static class Suovi
 
     /// <summary>
     /// Calls the Suovi Message Relay API.
-    /// [Documentation](https://tasks.frends.com/tasks/netum/Netum-Suovi-MessageRelay)
+    /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Netum-Suovi-MessageRelay)
     /// </summary>
     /// <param name="input">Essential parameters.</param>
     /// <param name="connection">Connection and authentication parameters.</param>
@@ -88,7 +88,7 @@ public static class Suovi
         if (input.Operation is Operation.CheckMailbox or Operation.SendMessage)
         {
             Require(input.ReceiverIdentity, nameof(input.ReceiverIdentity));
-            if (!System.Text.RegularExpressions.Regex.IsMatch(input.ReceiverIdentity, "^[0-9A-Za-z]{9}$|^[0-9]{6}[+-A][0-9]{3}[0-9A-Za-z]$"))
+            if (!System.Text.RegularExpressions.Regex.IsMatch(input.ReceiverIdentity, "^[0-9A-Za-z]{9}$|^[0-9]{6}[-+A-FU-Y][0-9]{3}[0-9A-Za-z]$"))
                 throw new ArgumentException("ReceiverIdentity must be a valid personal or business identity code.");
         }
 
