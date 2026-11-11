@@ -32,7 +32,7 @@ public static class Suovi
     /// <param name="connection">Connection and authentication parameters.</param>
     /// <param name="options">Additional parameters.</param>
     /// <param name="cancellationToken">Cancellation token supplied by Frends.</param>
-    /// <returns>HTTP response data and possible error details.</returns>
+    /// <returns>Object { string Body, int StatusCode, Dictionary(string, string) Headers, string ContentType, bool Success, Error Error }.&#10;&#10;Body contains the raw response text on success. Parse it as JSON to read the operation's fields.&#10;&#10;- **GetAccessToken** returns accessToken, tokenType, and expiresIn.&#10;- **Ping** returns status, timestamp, apiKeyId, and organizationId.&#10;- **CheckMailbox** returns receiverIdentity and mailboxEnabled.&#10;- **SendMessage** returns messageId, externalIdentifier, and status (for example, queued).&#10;- **GetMessageStatus** returns the API's message status response in Body.&#10;&#10;If ThrowErrorOnFailure is false, failures return Success = false and Error { string Message, Exception AdditionalInfo }.</returns>
     public static async Task<Result> MessageRelay(
         [PropertyTab] Input input,
         [PropertyTab] Connection connection,

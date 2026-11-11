@@ -9,7 +9,7 @@ public class Result
     /// <example>true</example>
     public bool Success { get; set; }
 
-    /// <summary>Response body.</summary>
+    /// <summary>Raw HTTP response text on success. Parse it as JSON when the operation returns JSON.</summary>
     /// <example>{ "mailboxEnabled": true }</example>
     public string Body { get; set; } = string.Empty;
 
@@ -25,7 +25,7 @@ public class Result
     /// <example>200</example>
     public int StatusCode { get; set; }
 
-    /// <summary>Error details.</summary>
+    /// <summary>Error details when the task fails and ThrowErrorOnFailure is false.</summary>
     /// <example>object { string Message, Exception AdditionalInfo }</example>
     public Error Error { get; set; }
 }
